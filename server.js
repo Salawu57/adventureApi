@@ -1,7 +1,10 @@
 const app = require('./app');
 
 
-const port = 4000;
-app.listen(port, () =>{
-    console.log(`Server running now on port ${port}... `);
+console.log(process.env);
+
+console.log("Am in ");
+
+app.listen(process.env.PORT, () =>{
+    console.log(`Server running now on port ${process.env.PORT}..... `);
 })
