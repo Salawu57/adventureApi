@@ -63,7 +63,7 @@ exports.getAllTour = async (req, res)=>{
 
         const limit = req.query.limit * 1 || 100;
 
-        const skipValue = (reqPage - 1 ) * 1 + limit;
+        const skipValue = (reqPage - 1 ) * limit;
         
         console.log(`${reqPage} and ${limit} with ${skipValue}`);
 
@@ -71,7 +71,7 @@ exports.getAllTour = async (req, res)=>{
 
       }
 
-      
+
       
       const tour = await query;
 
