@@ -1,6 +1,9 @@
 const express = require('express');
 
 const dotenv = require('dotenv');
+
+const morgan = require('morgan');
+
 dotenv.config({path:'./config.env'});
 
 const mongoose = require('mongoose');
@@ -8,6 +11,8 @@ const mongoose = require('mongoose');
 const tourRouter = require('./routers/tourRouter');
 
 const app = express();
+
+app.use(morgan('development'))
 
 app.use(express.json());
 

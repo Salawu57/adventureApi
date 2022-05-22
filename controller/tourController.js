@@ -17,13 +17,68 @@ exports.checkBody = (req, res, next)=>{
   }
 
 exports.getAllTour = async (req, res)=>{
+
     try{
-      const tour = await Tour.find();
+
+      let newQuery ={...req.query};
+
+
+      console.log(req.query);
+
+      const unWantedOption = ["sort","limit","page","fields"];
+
+      unWantedOption.forEach(el => delete newQuery[el])
+
+      let newQueryStr = JSON.stringify(newQuery);
+
+      newQueryStr = newQueryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+
+      const query =  Tour.find(JSON.parse(newQueryStr));
+
+     
+      if(req.query.sort){
+
+        let sortValue = req.query.sort;
+
+        sortValue = sortValue.split(',').join(' ');
+
+         query.sort(sortValue)
+
+      }
+      
+      if(req.query.fields){
+
+        let fieldsValue = req.query.fields;
+
+        fieldsValue = fieldsValue.split(",").join(' ');
+
+         query.select(fieldsValue);
+
+      }
+
+
+      if(req.query.page){
+
+        const reqPage = req.query.page * 1 || 1 ;
+
+        const limit = req.query.limit * 1 || 100;
+
+        const skipValue = (reqPage - 1 ) * 1 + limit;
+        
+        console.log(`${reqPage} and ${limit} with ${skipValue}`);
+
+        query.skip(skipValue).limit(limit);
+
+      }
+
+      
+      
+      const tour = await query;
 
       res.status(200)
       .json({
        status:"success",
-       length:tour.length,
+       results:tour.length,
        data:{
           tour
        }
@@ -108,6 +163,7 @@ exports.updateTour = async (req, res) =>{
     })
   }
 }
+
 
 exports.deleteTour = async (req, res) =>{
  console.log(req.params);
