@@ -45,7 +45,7 @@ exports.getAllTour = async (req, res)=>{
          query.sort(sortValue)
 
       }
-      
+
       if(req.query.fields){
 
         let fieldsValue = req.query.fields;
@@ -65,7 +65,7 @@ exports.getAllTour = async (req, res)=>{
 
         const skipValue = (reqPage - 1 ) * limit;
         
-        console.log(`${reqPage} and ${limit} with ${skipValue}`);
+        // console.log(`${reqPage} and ${limit} with ${skipValue}`);
 
         query.skip(skipValue).limit(limit);
 
