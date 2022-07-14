@@ -4,14 +4,12 @@ class APIFEATURES{
       this.query = query;
       this.queryString = queryString;
 
-      console.log("query =======>", this.query);
+
  }
 
     filter(){
 
       let newQuery ={...this.queryString};
-
-      console.log(this.query);
 
       const unWantedOption = ["sort","limit","page","fields"];
 

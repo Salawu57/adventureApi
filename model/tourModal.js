@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-
-
-
+const User = require('./userModel');
 
 const tourSchema = new mongoose.Schema({
 
@@ -15,7 +13,6 @@ const tourSchema = new mongoose.Schema({
      minlength:[10, 'A tour name must have more or equal than 10 characters']
     
  },
-
  slug:String,
 
  duration:{
@@ -32,7 +29,7 @@ const tourSchema = new mongoose.Schema({
      type:String,
      required:[true, 'A tour must have a difficulty'],
      enum:{
-         values:['easy','medium','hard'],
+         values:['easy','medium','difficult'],
          message:'Difficulty is either: easy, medium, difficult'
      }
  },
@@ -41,7 +38,8 @@ const tourSchema = new mongoose.Schema({
      type:Number,
      default:4.5,
      max:[5, 'Rating must be below 5.0'],
-     min:[1, 'Rating must be above 1.0']
+     min:[1, 'Rating must be above 1.0'],
+     set:val => Math.round(val * 10)/10
  },
 
  ratingsQuantity:{
@@ -86,7 +84,42 @@ const tourSchema = new mongoose.Schema({
      default:Date.now()
  },
 
- startDates:[Date]
+ startDates:[Date],
+
+ secretTour:{
+    type:Boolean,
+    default:false 
+ },
+ startLocation:{
+     type:{
+         type:String,
+         default:'Point',
+         enum:['Point']
+     },
+     coordinates:[Number],
+     address:String,
+     description:String
+ },
+ locations:[
+     {
+         type:{
+             type:String,
+             default:'Point',
+             enum:['Point']
+
+         },
+         coordinates:[Number],
+         address:String,
+         description:String,
+         day:Number
+     }
+ ],
+ guides:[
+     {
+        type:mongoose.Schema.ObjectId,
+        ref:'User'
+     }
+     ]
 
 },
  {
@@ -94,9 +127,26 @@ const tourSchema = new mongoose.Schema({
      toObject:{virtuals:true}
 })
 
+
+tourSchema.index({price: 1, ratingsAverage: -1});
+
+tourSchema.index({slug: 1});
+
+tourSchema.index({startLocation: '2dsphere'});
+
+
 tourSchema.virtual('durationWeeks').get(function(){
     return this.duration/7;
 });
+
+
+// virtual populate creating a relationship with review
+tourSchema.virtual('reviews', {
+    ref:'Review',
+    foreignField:'tour',
+    localField:'_id'
+});
+
 
 // DOCUMENT MIDDLEWARE : runs before .save() and .create()
 
@@ -108,14 +158,32 @@ tourSchema.pre('save', function(next){
 
 });
 
-
-tourSchema.post('save', function(doc, next){
-
-   console.log(doc)
+tourSchema.pre(/^find/, function(next){
+    this.populate({
+        path:'guides',
+        select:'-__v -passwordChangedAt'
+    });
 
     next();
+})
 
-});
+tourSchema.pre('save', async function(next){
+
+    const guidesPromises = this.guides.map(async id => await User.findById(id));
+
+    this.guides = await Promise.all(guidesPromises);
+
+    next();
+})
+
+
+// tourSchema.post('save', function(doc, next){
+
+//    console.log(doc)
+
+//     next();
+
+// });
 
 const Tour = mongoose.model('Tour', tourSchema);
 

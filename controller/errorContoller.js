@@ -1,77 +1,118 @@
 const AppError = require("../utils/appError");
 
-const handleCastErrorDB = err => {
-
-  const message =`Invalid ${err.path}: ${err.value}.`
+const handleCastErrorDB = (err) => {
+  const message = `Invalid ${err.path}: ${err.value}.`;
 
   return new AppError(message, 400);
-}
+};
 
-const handleDuplicateFieldsDB = err =>{
- 
- const {keyValue} = {...err};
-
- console.log("message ====>", err);
+const handleDuplicateFieldsDB = (err) => {
+  const { keyValue } = { ...err };
 
   const message = `Duplicate field value: ${keyValue.name}. Please use another value.`;
 
   return new AppError(message, 400);
-}
-
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
-  });
 };
 
-const sendErrorProd = (err, res) => {
-  //Operational , trusted error: send message to client
+const handleValidationErrorDB = (err) => {
+  const errors = Object.values(err.errors).map((el) => el.message);
+
+  const checkErrors = Object.values(err.errors);
+
+  const message = `Invalid input data. ${errors.join(". ")}`;
+
+  return new AppError(message, 400);
+};
+
+const handleJWTError = (err) =>
+  new AppError("Invalid token. Please login again", 401);
+
+const handleJWTExpiredError = (err) =>
+  new AppError("Your token has expired! Please login again", 401);
+
+const sendErrorDev = (err,req,res) => {
+  //API
+  if (req.originalUrl.startsWith("/api")) {
+    return res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  } 
+    // RENDERING PAGE
+     // log error to console
+     console.error(`ERROR 🔥`, err);
+
+    return res.status(err.statusCode).render("error", {
+      title: "Something went wrong!",
+      msg: err.message,
+    });
+};
+
+const sendErrorProd = (err,req, res) => {
+
+  //API
+  if(req.originalUrl.startsWith('/api')){
+ 
+    //Operational , trusted error: send message to client
   if (err.isOperational) {
-    res.status(err.statusCode).json({
+    return res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
     });
-  } else {
+  } 
     // log error to console
     console.error(`ERROR 🔥`, err.name);
 
     //send generic message
-    res.status(500).json({
+    return res.status(500).json({
       status: "error",
       message: "Something went very wrong",
     });
   }
+  
+  //RENDERING PAGE
+    //Operational , trusted error: send message to client
+  if (err.isOperational) {
+    return res.status(err.statusCode).render("error", {
+      title: "Something went wrong!",
+      msg: err.message,
+    });
+  } 
+    // log error to console
+    console.error(`ERROR 🔥`, err.name);
+
+    //send generic message
+   return  res.status(err.statusCode).render("error", {
+      title: "Something went wrong!",
+      msg: 'Please try again later',
+    });
 };
 
-
 module.exports = (err, req, res, next) => {
-   console.log(err)
+  console.log(err);
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
 
   if (process.env.NODE_ENV === "development") {
-    
-    sendErrorDev(err, res);
-
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === "production") {
-
     let copyError = { ...err };
+     copyError.message = err.message;
 
-    console.log(copyError);
+    if (err.name === "CastError") {
+      copyError = handleCastErrorDB(err);
+    } else if (copyError.code === 11000) {
+      copyError = handleDuplicateFieldsDB(copyError);
+    } else if (err.name === "ValidationError") {
+      copyError = handleValidationErrorDB(err);
+    } else if (err.name === "JsonWebTokenError") {
+      copyError = handleJWTError(err);
+    } else if (err.name === "TokenExpiredError") {
+      copyError = handleJWTExpiredError(err);
+    }
 
-      if(copyError.name === 'CastError'){
-       
-        copyError =  handleCastErrorDB(copyError)
-
-      }else if(copyError.code === 11000){
-
-        copyError = handleDuplicateFieldsDB(copyError)
-
-      }
-
-    sendErrorProd(copyError, res);
+    sendErrorProd(copyError, req, res);
   }
 };
