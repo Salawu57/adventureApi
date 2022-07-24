@@ -78,7 +78,7 @@ exports.webhookCheckout = (req, res, next) => {
 
      createBookingCheckout(event.data.object);
 
-     res.status(200).json({received: true, booking});
+     res.status(200).json({received: true});
   }
 };
 
