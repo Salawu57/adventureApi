@@ -18,15 +18,16 @@ const tourRouter = require("./routers/tourRouter");
 const userRouter = require("./routers/userRouter");
 const reviewRouter = require("./routers/reviewRouter");
 const bookingRouter = require("./routers/bookingRouter");
+const bookingController = require("./controller/bookingController");
 const viewRouter = require("./routers/viewRoute");
 const cookieParser = require("cookie-parser");
 const compression = require("compression");
-const cors = require('cors');
+const cors = require("cors");
 
 const app = express();
 
 // enable process for app to be able to test if connection is secure
-app.enable('trust proxy');
+app.enable("trust proxy");
 
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));
@@ -34,24 +35,25 @@ app.set("views", path.join(__dirname, "views"));
 //implement CORS
 app.use(cors());
 
-
-app.options('*', cors());
+app.options("*", cors());
 
 app.use(express.static(path.join(__dirname, "public")));
 
 //Set Security HTTP header
-app.use(helmet({
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: {
-      allowOrigins: ['*']
-  },
-  contentSecurityPolicy: {
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: {
+      allowOrigins: ["*"],
+    },
+    contentSecurityPolicy: {
       directives: {
-          defaultSrc: ['*'],
-          scriptSrc: ["* data: 'unsafe-eval' 'unsafe-inline' blob:"]
-      }
-  }
-}));
+        defaultSrc: ["*"],
+        scriptSrc: ["* data: 'unsafe-eval' 'unsafe-inline' blob:"],
+      },
+    },
+  })
+);
 
 //Development Logging
 if (process.env.NODE_ENV === "development") {
@@ -67,10 +69,16 @@ const limiter = rateLimit({
 
 app.use("/api", limiter);
 
+app.post(
+  "/webhook-checkout",
+  express.raw({ type: "application/json" }),
+  bookingController.webhookCheckout
+);
+
 // Body Parser reading data from the body in req.body
 app.use(express.json({ limit: "10kb" }));
 //Get form data
-app.use(express.urlencoded({extended:true, limit: '10kb'}));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
 //Parse data from the cookies
 app.use(cookieParser());
@@ -98,13 +106,11 @@ app.use(compression());
 //sanitizing data against no-sql injection
 app.use(mongoSanitize());
 
-app.use((req,res,next) => {
-
+app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
 
   next();
-})
-
+});
 
 app.use("/", viewRouter);
 app.use("/api/v1/tours", tourRouter);
