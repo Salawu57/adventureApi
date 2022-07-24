@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 
+// new Email(user, url).sendWelcome();
 
 const sendEmail = async options => {
   // create a transporter
@@ -12,9 +13,8 @@ const sendEmail = async options => {
       }
   });
 
-
   //define the email options
-  const mailOptions ={
+  const mailOptions = {
       from:'Administrator  <admin@adventure.io>',
       to:options.email,
       subject:options.subject,

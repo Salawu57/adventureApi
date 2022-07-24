@@ -17,6 +17,7 @@ const mongoose = require("mongoose");
 const tourRouter = require("./routers/tourRouter");
 const userRouter = require("./routers/userRouter");
 const reviewRouter = require("./routers/reviewRouter");
+const bookingRouter = require("./routers/bookingRouter");
 const viewRouter = require("./routers/viewRoute");
 const cookieParser = require("cookie-parser");
 
@@ -95,6 +96,7 @@ app.use("/", viewRouter);
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/reviews", reviewRouter);
+app.use("/api/v1/bookings", bookingRouter);
 
 // app.all("*", (req, res, next) => {
 
