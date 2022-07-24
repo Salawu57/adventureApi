@@ -5,6 +5,7 @@ const bookingController = require("../controller/bookingController");
 
 const router = express.Router();
 
+router.use(viewsController.alerts);
 router.get(
   "/",
   // bookingController.createBookingCheckout,
