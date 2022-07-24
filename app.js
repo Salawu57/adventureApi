@@ -24,6 +24,9 @@ const compression = require("compression");
 
 const app = express();
 
+// enable process for app to be able to test if connection is secure
+app.enable('trust proxy');
+
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));
 
@@ -82,6 +85,7 @@ app.use(
   })
 );
 
+// to compress the app
 app.use(compression());
 
 //sanitizing data against no-sql injection
