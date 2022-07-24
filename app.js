@@ -20,6 +20,7 @@ const reviewRouter = require("./routers/reviewRouter");
 const bookingRouter = require("./routers/bookingRouter");
 const viewRouter = require("./routers/viewRoute");
 const cookieParser = require("cookie-parser");
+const compression = require("compression");
 
 const app = express();
 
@@ -80,6 +81,8 @@ app.use(
     ],
   })
 );
+
+app.use(compression());
 
 //sanitizing data against no-sql injection
 app.use(mongoSanitize());
